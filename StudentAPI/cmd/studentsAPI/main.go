@@ -14,6 +14,7 @@ import (
 
 	"github.com/Vivek09Chahal/studentsAPI/internal/config"
 	"github.com/Vivek09Chahal/studentsAPI/internal/http/handlers/student"
+	"github.com/Vivek09Chahal/studentsAPI/internal/storage/sqlite"
 )
 
 func main() {
@@ -22,6 +23,14 @@ func main() {
 	cfg := config.MustLoad()
 
 	// database setup
+	_, err := sqlite.New(cfg)
+ 
+	if err != nil {
+	    log.Fatal(err)
+	}
+
+	slog.Info("storage initialize", slog.String("env", cfg.Env))
+	
 	// setup router
 	router := http.NewServeMux()
 	
@@ -36,7 +45,7 @@ func main() {
 	fmt.Printf("server started %s", cfg.HTTPServer.Addr)
 
 	done := make(chan os.Signal, 1)
-
+ 
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
@@ -52,7 +61,7 @@ func main() {
 	 
 	ctx, cancel := context.WithTimeout(context.Background(), 5 * time.Second)
 	defer cancel()
-	err := server.Shutdown(ctx)
+	err = server.Shutdown(ctx)
 
 	if err !=  nil {
 	    slog.Error("failed to shutdown server", slog.String("error", err.Error()))
